@@ -7,20 +7,19 @@ import org.testng.annotations.Test;
 
 @Test
 @CucumberOptions(
-        features = {"src/test/resources/features/ui"},
+        features = "src/test/resources/features/ui",
         glue = {"com.labcorp.stepdefinitions", "com.labcorp.hooks"},
         plugin = {
                 "pretty",
-                "html:target/cucumber-reports/ui-report.html",
-                "json:target/cucumber-reports/ui-report.json"
+                "summary",
+                "json:target/cucumber-ui.json",
+                "com.aventstack.extentreports.cucumber.adapter.ExtentCucumberAdapter:"
         },
-        monochrome = true,
-        tags = "@UI"
+        monochrome = true
 )
 public class UiTestRunner extends AbstractTestNGCucumberTests {
-    
     @Override
-    @DataProvider(parallel = true)
+    @DataProvider(parallel = false)
     public Object[][] scenarios() {
         return super.scenarios();
     }

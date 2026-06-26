@@ -1,140 +1,66 @@
-package com.labcorp.pages;
+package com.labcorp.utils;
 
-import com.labcorp.drivers.DriverFactory;
-import com.labcorp.utils.WaitUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.*;
-import org.openqa.selenium.interactions.Actions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.time.Duration;
 import java.util.List;
-import java.util.Set;
 
 public abstract class BasePage {
-    
+    protected final Logger log = LogManager.getLogger(this.getClass());
     protected final WebDriver driver;
-    protected final WaitUtils waitUtils;
-    protected final Actions actions;
-    protected final JavascriptExecutor jsExecutor;
-    protected static final Logger logger = LoggerFactory.getLogger(BasePage.class);
-    
+    protected final WebDriverWait wait;
+
     protected BasePage() {
-        WebDriver driverInstance = DriverFactory.getInstance().getDriver();
-        if (driverInstance == null) {
-            throw new IllegalStateException("WebDriver not initialized. Call DriverFactory.getInstance().getDriver() first");
-        }
-        this.driver = driverInstance;
-        this.waitUtils = new WaitUtils(driver);
-        this.actions = new Actions(driver);
-        this.jsExecutor = (JavascriptExecutor) driver;
+        this.driver = DriverManager.getDriver();
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(DriverManager.getExplicitWaitSeconds()));
     }
-    
-    protected WebElement findElement(By locator) {
-        return waitUtils.waitForVisibility(locator);
+
+    protected WebElement visible(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
     }
-    
-    protected WebElement findElement(By locator, int timeoutSeconds) {
-        return waitUtils.waitForVisibility(locator, timeoutSeconds);
+
+    protected WebElement clickable(By locator) {
+        return wait.until(ExpectedConditions.elementToBeClickable(locator));
     }
-    
-    protected WebElement findElementById(String id) {
-        return findElement(By.id(id));
+
+    protected List<WebElement> allVisible(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(locator));
     }
-    
-    protected WebElement findElementByCss(String cssSelector) {
-        return findElement(By.cssSelector(cssSelector));
-    }
-    
-    protected WebElement findElementByXPath(String xpath) {
-        return findElement(By.xpath(xpath));
-    }
-    
-    protected List<WebElement> findElements(By locator) {
-        return waitUtils.waitForAllVisibility(locator);
-    }
-    
+
     protected void click(By locator) {
-        waitUtils.waitForClickability(locator).click();
-    }
-    
-    protected void click(WebElement element) {
-        waitUtils.waitForClickability(element).click();
-    }
-    
-    protected void clickWithJavascript(WebElement element) {
-        jsExecutor.executeScript("arguments[0].click();", element);
-    }
-    
-    protected void clickWithJavascript(By locator) {
-        WebElement element = findElement(locator);
-        jsExecutor.executeScript("arguments[0].click();", element);
-    }
-    
-    protected void sendKeys(By locator, String text) {
-        WebElement element = findElement(locator);
-        element.clear();
-        element.sendKeys(text);
-    }
-    
-    protected String getText(By locator) {
-        return findElement(locator).getText().trim();
-    }
-    
-    protected void scrollToElement(By locator) {
-        WebElement element = findElement(locator);
-        jsExecutor.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element);
-    }
-    
-    protected void scrollToElement(WebElement element) {
-        jsExecutor.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element);
-    }
-    
-    protected void waitForPageLoad() {
-        waitUtils.waitForPageToLoad();
-    }
-    
-    protected boolean isElementDisplayed(By locator) {
         try {
-            return findElement(locator).isDisplayed();
-        } catch (Exception e) {
+            clickable(locator).click();
+        } catch (StaleElementReferenceException | ElementClickInterceptedException e) {
+            log.warn("Retry JS click for locator {} due to {}", locator, e.getMessage());
+            WebElement el = clickable(locator);
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+        }
+    }
+
+    protected void type(By locator, String text) {
+        WebElement el = visible(locator);
+        el.clear();
+        el.sendKeys(text);
+    }
+
+    protected String text(By locator) {
+        return visible(locator).getText().trim();
+    }
+
+    protected boolean isDisplayed(By locator) {
+        try {
+            return visible(locator).isDisplayed();
+        } catch (TimeoutException e) {
             return false;
         }
     }
-    
-    protected boolean isElementPresent(By locator) {
-        try {
-            return !driver.findElements(locator).isEmpty();
-        } catch (Exception e) {
-            return false;
-        }
-    }
-    
-    protected boolean isElementPresent(By locator, int timeoutSeconds) {
-        try {
-            return waitUtils.waitForPresence(locator, timeoutSeconds) != null;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-    
-    protected boolean containsText(String text) {
-        return driver.getPageSource().contains(text);
-    }
-    
-    protected void switchToNewWindow() {
-        String currentWindow = driver.getWindowHandle();
-        Set<String> allWindows = driver.getWindowHandles();
-        for (String window : allWindows) {
-            if (!window.equals(currentWindow)) {
-                driver.switchTo().window(window);
-                break;
-            }
-        }
-        waitForPageLoad();
-    }
-    
-    protected void refreshPage() {
-        driver.navigate().refresh();
-        waitForPageLoad();
+
+    protected void scrollTo(By locator) {
+        WebElement el = visible(locator);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
     }
 }

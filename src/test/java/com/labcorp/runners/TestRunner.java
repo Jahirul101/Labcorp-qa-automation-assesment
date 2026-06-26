@@ -1,26 +1,20 @@
 package com.labcorp.runners;
 
-import io.cucumber.testng.AbstractTestNGCucumberTests;
-import io.cucumber.testng.CucumberOptions;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import io.cucumber.junit.Cucumber;
+import io.cucumber.junit.CucumberOptions;
+import org.junit.runner.RunWith;
 
-@Test
+@RunWith(Cucumber.class)
 @CucumberOptions(
-        features = {"src/test/resources/features"},
+        features = "src/test/resources/features/ui",
         glue = {"com.labcorp.stepdefinitions", "com.labcorp.hooks"},
         plugin = {
                 "pretty",
-                "html:target/cucumber-reports/all-report.html",
-                "json:target/cucumber-reports/all-report.json"
+                "summary",
+                "html:target/cucumber-report.html",
+                "json:target/cucumber-report.json"
         },
         monochrome = true
 )
-public class TestRunner extends AbstractTestNGCucumberTests {
-    
-    @Override
-    @DataProvider(parallel = true)
-    public Object[][] scenarios() {
-        return super.scenarios();
-    }
+public class TestRunner {
 }

@@ -1,128 +1,36 @@
 package com.labcorp.pages;
 
+import com.labcorp.utils.BasePage;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 public class HomePage extends BasePage {
-    
-    private static final Logger logger = LoggerFactory.getLogger(HomePage.class);
-    
-    // Updated resilient XPath locators for Careers link
-    private static final By CAREERS_LINK = By.xpath("//a[text()='Careers']");
-    private static final By CAREERS_LINK_FALLBACK = By.xpath("//div[contains(@class, 'cmp-text')]//a[contains(text(), 'Careers')]");
-    private static final By COOKIE_ACCEPT_BUTTON = By.xpath("//*[@id='onetrust-accept-btn-handler']");
-    
-    private static final String BASE_URL = "https://www.labcorp.com/";
-    
-    public HomePage navigateToHomePage() {
-        logger.info("Navigating to LabCorp home page: {}", BASE_URL);
-        driver.get(BASE_URL);
-        waitForPageLoad();
-        acceptCookiesIfPresent();
-        return this;
+
+    private final By cookieAcceptBtn = By.cssSelector("#onetrust-accept-btn-handler");
+
+    // top nav + footer + generic fallback
+    private final By careersTopNav = By.linkText("Careers");
+    private final By careersHref = By.cssSelector("a[href*='careers']");
+    private final By careersFallback = By.xpath("//a[contains(translate(.,'CAREERS','careers'),'careers')]");
+
+    public void open(String baseUrl) {
+        driver.get(baseUrl);
     }
-    
-    private void acceptCookiesIfPresent() {
-        try {
-            // Wait for cookie banner to be present
-            if (waitUtils.waitForPresence(COOKIE_ACCEPT_BUTTON, 5) != null) {
-                // Wait for it to be clickable
-                WebElement acceptBtn = waitUtils.waitForClickability(COOKIE_ACCEPT_BUTTON, 5);
-                if (acceptBtn != null) {
-                    acceptBtn.click();
-                    waitUtils.waitForInvisibility(COOKIE_ACCEPT_BUTTON, 5);
-                    logger.info("Cookies accepted using OneTrust button");
-                }
-            }
-        } catch (Exception e) {
-            logger.debug("Cookie banner not present or already accepted: {}", e.getMessage());
+
+    public void acceptCookiesIfPresent() {
+        if (isDisplayed(cookieAcceptBtn)) {
+            click(cookieAcceptBtn);
         }
     }
-    
-    public CareersPage navigateToCareers() {
-        logger.info("Navigating to Careers page");
-        waitForPageLoad();
-        
-        boolean clicked = false;
-        
-        // Strategy 1: Direct text match on anchor
-        try {
-            if (isElementPresent(CAREERS_LINK)) {
-                click(CAREERS_LINK);
-                clicked = true;
-                logger.info("Clicked Careers link using primary XPath: //a[text()='Careers']");
-            }
-        } catch (Exception e) {
-            logger.debug("Strategy 1 (primary XPath) failed: {}", e.getMessage());
+
+    public void clickCareers() {
+        if (isDisplayed(careersTopNav)) {
+            click(careersTopNav);
+            return;
         }
-        
-        // Strategy 2: Scoped within component text blocks
-        if (!clicked) {
-            try {
-                if (isElementPresent(CAREERS_LINK_FALLBACK)) {
-                    click(CAREERS_LINK_FALLBACK);
-                    clicked = true;
-                    logger.info("Clicked Careers link using fallback XPath");
-                }
-            } catch (Exception e) {
-                logger.debug("Strategy 2 (fallback XPath) failed: {}", e.getMessage());
-            }
+        if (isDisplayed(careersHref)) {
+            click(careersHref);
+            return;
         }
-        
-        // Strategy 3: Find any link with careers text or href
-        if (!clicked) {
-            try {
-                List<WebElement> allLinks = driver.findElements(By.tagName("a"));
-                for (WebElement link : allLinks) {
-                    String text = link.getText().trim();
-                    String href = link.getAttribute("href");
-                    if ((text.equalsIgnoreCase("Careers") || text.contains("Careers")) || 
-                        (href != null && href.contains("/careers"))) {
-                        scrollToElement(link);
-                        clickWithJavascript(link);
-                        clicked = true;
-                        logger.info("Clicked Careers link found by text search: '{}'", text);
-                        break;
-                    }
-                }
-            } catch (Exception e) {
-                logger.debug("Strategy 3 (link search) failed: {}", e.getMessage());
-            }
-        }
-        
-        if (!clicked) {
-            logger.info("Direct navigation to careers page as fallback");
-            driver.get("https://www.labcorp.com/careers");
-        }
-        
-        waitForPageLoad();
-        switchToNewWindow();
-        return new CareersPage();
-    }
-    
-    public boolean isHomePageLoaded() {
-        try {
-            waitForPageLoad();
-            boolean hasCareersLink = isElementPresent(CAREERS_LINK) || 
-                                    isElementPresent(CAREERS_LINK_FALLBACK);
-            String title = driver.getTitle();
-            boolean hasTitle = title != null && 
-                              (title.contains("LabCorp") || 
-                               title.contains("Labcorp"));
-            
-            logger.info("Homepage loaded check - Careers link: {}, Title: {}", hasCareersLink, hasTitle);
-            return hasCareersLink || hasTitle;
-        } catch (Exception e) {
-            logger.error("Error checking if homepage is loaded: {}", e.getMessage());
-            return false;
-        }
-    }
-    
-    public String getPageTitle() {
-        return driver.getTitle();
+        click(careersFallback);
     }
 }
