@@ -1,16 +1,8 @@
 # BDD Automation Framework
 
 ## Framework Overview
-Production-ready Behavior-Driven Development (BDD) automation framework built with Java, Cucumber, and Selenium WebDriver.
+Assesment for Labcorp. Test automation framework built with Java, Cucumber, and Selenium WebDriver.
 
-## Key Features
-- ✅ 100% defect detection with robust error handling
-- ✅ Executive-ready HTML reports with interactive graphs
-- ✅ Screenshot capture on failure with inline report embedding
-- ✅ Thread-safe parallel execution support
-- ✅ Explicit waits (no flaky implicit waits)
-- ✅ Soft assertions for capturing multiple failures
-- ✅ Global exception handling
 
 ## Technology Stack
 - Java 17+
@@ -30,9 +22,9 @@ Production-ready Behavior-Driven Development (BDD) automation framework built wi
 - Git
 
 ### Clone Repository
-```bash
+bash
 git clone https://github.com/your-username/bdd-automation-framework.git
-```
+
 
 ### Import into Eclipse
 1. File → Import → Existing Maven Projects
@@ -40,16 +32,31 @@ git clone https://github.com/your-username/bdd-automation-framework.git
 3. Click Finish
 
 ### Run Tests
-```bash
+bash
 # Run all tests
 mvn clean test
 
-# Run specific tags
-mvn clean test -Dcucumber.filter.tags="@Smoke"
+Run UI test:
+mvn test -Pui-tests
+
+Run API tests:
+mvn test -Papi-tests
+# Run tests in parallel (faster execution)
+mvn test -Pparallel
+
+# Run only smoke tests (both UI and API)
+mvn test -Psmoke
+
+# Run a specific feature file
+mvn test -Dcucumber.features="src/test/resources/features/api/get_request.feature"
+
+# Run scenarios with specific tags
+mvn test -Dcucumber.filter.tags="@Smoke"
+mvn test -Dcucumber.filter.tags="@API"
+mvn test -Dcucumber.filter.tags="@UI"
 
 # Generate reports only
 mvn cluecumber-report:reporting
-```
 
 ### Reports Location
 - Masterthought: `target/cucumber-html-reports/overview-features.html`
