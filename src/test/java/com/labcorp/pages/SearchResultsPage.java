@@ -1,9 +1,15 @@
 package com.labcorp.pages;
 
 import com.labcorp.utils.BasePage;
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.ElementNotInteractableException;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.time.Duration;
 import java.util.List;
 
 public class SearchResultsPage extends BasePage {
@@ -16,16 +22,24 @@ public class SearchResultsPage extends BasePage {
 
     private final By jobLinks = By.xpath(
             "//a[@href and (" +
-            "contains(@href,'/job/') or contains(@href,'/jobs/') or contains(@href,'job-details') or contains(@href,'jobdetail')" +
-            ")]"
+                    "contains(@href,'/job/') or contains(@href,'/jobs/') or contains(@href,'job-details') or contains(@href,'jobdetail')" +
+                    ")]"
     );
+
+    private final Duration shortPollTimeout = Duration.ofSeconds(8);
 
     public boolean hasNoResults() {
         return !driver.findElements(noResults).isEmpty();
     }
 
     public boolean hasAnyJobResults() {
-        return !driver.findElements(jobLinks).isEmpty();
+        WebDriverWait shortWait = new WebDriverWait(driver, shortPollTimeout);
+        Boolean ready = shortWait.until(d -> {
+            boolean foundResults = !d.findElements(jobLinks).isEmpty();
+            boolean explicitNoResults = !d.findElements(noResults).isEmpty();
+            return foundResults || explicitNoResults;
+        });
+        return Boolean.TRUE.equals(ready) && !driver.findElements(jobLinks).isEmpty();
     }
 
     public void openFirstActiveJob() {
@@ -42,8 +56,13 @@ public class SearchResultsPage extends BasePage {
 
         Exception lastError = null;
 
-        for (WebElement link : links) {
+        for (int i = 0; i < links.size(); i++) {
             try {
+                List<WebElement> refreshed = driver.findElements(jobLinks);
+                if (i >= refreshed.size()) break;
+
+                WebElement link = refreshed.get(i);
+
                 if (!link.isDisplayed()) continue;
 
                 String href = link.getAttribute("href");
@@ -55,17 +74,19 @@ public class SearchResultsPage extends BasePage {
 
                 try {
                     wait.until(ExpectedConditions.elementToBeClickable(link));
-                } catch (Exception ignored) {}
-
-                try {
                     link.click();
                 } catch (ElementNotInteractableException e) {
                     ((JavascriptExecutor) driver).executeScript("arguments[0].click();", link);
                 }
 
-                wait.until(d -> !d.getCurrentUrl().toLowerCase().contains("search"));
+                wait.until(d -> {
+                    String url = d.getCurrentUrl().toLowerCase();
+                    return !url.contains("search-jobs") && !url.contains("/search");
+                });
                 return;
 
+            } catch (StaleElementReferenceException e) {
+                lastError = e;
             } catch (Exception e) {
                 lastError = e;
             }
