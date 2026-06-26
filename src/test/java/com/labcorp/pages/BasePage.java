@@ -12,7 +12,6 @@ import java.util.Set;
 
 public abstract class BasePage {
     
-    // protected so child classes can access directly
     protected final WebDriver driver;
     protected final WaitUtils waitUtils;
     protected final Actions actions;
@@ -20,7 +19,11 @@ public abstract class BasePage {
     protected static final Logger logger = LoggerFactory.getLogger(BasePage.class);
     
     protected BasePage() {
-        this.driver = DriverFactory.getInstance().getDriver();
+        WebDriver driverInstance = DriverFactory.getInstance().getDriver();
+        if (driverInstance == null) {
+            throw new IllegalStateException("WebDriver not initialized. Call DriverFactory.getInstance().getDriver() first");
+        }
+        this.driver = driverInstance;
         this.waitUtils = new WaitUtils(driver);
         this.actions = new Actions(driver);
         this.jsExecutor = (JavascriptExecutor) driver;
@@ -28,6 +31,10 @@ public abstract class BasePage {
     
     protected WebElement findElement(By locator) {
         return waitUtils.waitForVisibility(locator);
+    }
+    
+    protected WebElement findElement(By locator, int timeoutSeconds) {
+        return waitUtils.waitForVisibility(locator, timeoutSeconds);
     }
     
     protected WebElement findElementById(String id) {
@@ -50,7 +57,16 @@ public abstract class BasePage {
         waitUtils.waitForClickability(locator).click();
     }
     
+    protected void click(WebElement element) {
+        waitUtils.waitForClickability(element).click();
+    }
+    
     protected void clickWithJavascript(WebElement element) {
+        jsExecutor.executeScript("arguments[0].click();", element);
+    }
+    
+    protected void clickWithJavascript(By locator) {
+        WebElement element = findElement(locator);
         jsExecutor.executeScript("arguments[0].click();", element);
     }
     
@@ -69,6 +85,10 @@ public abstract class BasePage {
         jsExecutor.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element);
     }
     
+    protected void scrollToElement(WebElement element) {
+        jsExecutor.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element);
+    }
+    
     protected void waitForPageLoad() {
         waitUtils.waitForPageToLoad();
     }
@@ -83,14 +103,20 @@ public abstract class BasePage {
     
     protected boolean isElementPresent(By locator) {
         try {
-            driver.findElement(locator);
-            return true;
-        } catch (NoSuchElementException e) {
+            return !driver.findElements(locator).isEmpty();
+        } catch (Exception e) {
             return false;
         }
     }
     
-    // Protected method for checking text presence
+    protected boolean isElementPresent(By locator, int timeoutSeconds) {
+        try {
+            return waitUtils.waitForPresence(locator, timeoutSeconds) != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
     protected boolean containsText(String text) {
         return driver.getPageSource().contains(text);
     }
@@ -104,6 +130,11 @@ public abstract class BasePage {
                 break;
             }
         }
+        waitForPageLoad();
+    }
+    
+    protected void refreshPage() {
+        driver.navigate().refresh();
         waitForPageLoad();
     }
 }

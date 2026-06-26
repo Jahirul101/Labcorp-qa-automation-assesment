@@ -12,13 +12,8 @@ public class HomePage extends BasePage {
     private static final Logger logger = LoggerFactory.getLogger(HomePage.class);
     
     // Updated resilient XPath locators for Careers link
-    // Primary: Direct text match on anchor
     private static final By CAREERS_LINK = By.xpath("//a[text()='Careers']");
-    
-    // Fallback: Scoped within component text blocks with contains
     private static final By CAREERS_LINK_FALLBACK = By.xpath("//div[contains(@class, 'cmp-text')]//a[contains(text(), 'Careers')]");
-    
-    // Cookie accept button
     private static final By COOKIE_ACCEPT_BUTTON = By.xpath("//*[@id='onetrust-accept-btn-handler']");
     
     private static final String BASE_URL = "https://www.labcorp.com/";
@@ -33,13 +28,18 @@ public class HomePage extends BasePage {
     
     private void acceptCookiesIfPresent() {
         try {
-            if (isElementPresent(COOKIE_ACCEPT_BUTTON)) {
-                click(COOKIE_ACCEPT_BUTTON);
-                waitUtils.waitForInvisibility(COOKIE_ACCEPT_BUTTON);
-                logger.info("Cookies accepted using OneTrust button");
+            // Wait for cookie banner to be present
+            if (waitUtils.waitForPresence(COOKIE_ACCEPT_BUTTON, 5) != null) {
+                // Wait for it to be clickable
+                WebElement acceptBtn = waitUtils.waitForClickability(COOKIE_ACCEPT_BUTTON, 5);
+                if (acceptBtn != null) {
+                    acceptBtn.click();
+                    waitUtils.waitForInvisibility(COOKIE_ACCEPT_BUTTON, 5);
+                    logger.info("Cookies accepted using OneTrust button");
+                }
             }
         } catch (Exception e) {
-            logger.debug("Cookie banner not present or already accepted");
+            logger.debug("Cookie banner not present or already accepted: {}", e.getMessage());
         }
     }
     
@@ -66,7 +66,7 @@ public class HomePage extends BasePage {
                 if (isElementPresent(CAREERS_LINK_FALLBACK)) {
                     click(CAREERS_LINK_FALLBACK);
                     clicked = true;
-                    logger.info("Clicked Careers link using fallback XPath: //div[contains(@class, 'cmp-text')]//a[contains(text(), 'Careers')]");
+                    logger.info("Clicked Careers link using fallback XPath");
                 }
             } catch (Exception e) {
                 logger.debug("Strategy 2 (fallback XPath) failed: {}", e.getMessage());
@@ -82,8 +82,8 @@ public class HomePage extends BasePage {
                     String href = link.getAttribute("href");
                     if ((text.equalsIgnoreCase("Careers") || text.contains("Careers")) || 
                         (href != null && href.contains("/careers"))) {
-                        jsExecutor.executeScript("arguments[0].scrollIntoView(true);", link);
-                        jsExecutor.executeScript("arguments[0].click();", link);
+                        scrollToElement(link);
+                        clickWithJavascript(link);
                         clicked = true;
                         logger.info("Clicked Careers link found by text search: '{}'", text);
                         break;

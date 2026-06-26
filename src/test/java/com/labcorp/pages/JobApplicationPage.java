@@ -71,11 +71,11 @@ public class JobApplicationPage extends BasePage {
             if (isElementPresent(RETURN_TO_SEARCH)) {
                 click(RETURN_TO_SEARCH);
             } else {
-                // Fixed: using driver from BasePage (now accessible because it's protected)
+                logger.warn("Return to search button not found, using back navigation");
                 driver.navigate().back();
             }
         } catch (Exception e) {
-            // Fixed: using driver from BasePage (now accessible because it's protected)
+            logger.warn("Could not click return button, using back navigation: {}", e.getMessage());
             driver.navigate().back();
         }
         waitForPageLoad();
@@ -83,7 +83,6 @@ public class JobApplicationPage extends BasePage {
     }
     
     public boolean isApplicationFormDisplayed() {
-        // Fixed: using containsText() method from BasePage (protected, accessible here)
         return isElementDisplayed(APPLY_FORM) || containsText("Apply for this job");
     }
 }

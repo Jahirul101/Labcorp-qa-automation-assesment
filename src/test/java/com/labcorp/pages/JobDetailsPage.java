@@ -1,6 +1,7 @@
 package com.labcorp.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,7 +142,6 @@ public class JobDetailsPage extends BasePage {
             boolean byId = isElementPresent(APPLY_NOW_BUTTON);
             boolean byXpath = isElementPresent(By.xpath("//button[contains(text(), 'Apply Now')]"));
             boolean byXpath2 = isElementPresent(By.xpath("//a[contains(text(), 'Apply Now')]"));
-            // Fixed: using containsText() method from BasePage instead of directly accessing driver
             boolean byContains = containsText("Apply Now");
             
             logger.info("Apply Now presence - By ID: {}, By XPath: {}, By XPath2: {}, Contains: {}", 
@@ -156,38 +156,52 @@ public class JobDetailsPage extends BasePage {
     
     public JobApplicationPage clickApplyNow() {
         logger.info("Clicking Apply Now button");
+        WebElement applyButton = null;
+        
         try {
-            if (isElementPresent(APPLY_NOW_BUTTON)) {
-                scrollToElement(APPLY_NOW_BUTTON);
-                click(APPLY_NOW_BUTTON);
-            } else {
-                By applyButton = By.xpath("//button[contains(text(), 'Apply Now')]");
-                if (isElementPresent(applyButton)) {
-                    scrollToElement(applyButton);
-                    click(applyButton);
-                } else {
-                    By applyLink = By.xpath("//a[contains(text(), 'Apply Now')]");
-                    if (isElementPresent(applyLink)) {
-                        scrollToElement(applyLink);
-                        click(applyLink);
-                    } else {
-                        WebElement applyButton2 = findElement(By.xpath("//button[contains(text(), 'Apply')]"));
-                        if (applyButton2 != null) {
-                            clickWithJavascript(applyButton2);
-                        } else {
-                            throw new RuntimeException("Apply Now button not found");
-                        }
-                    }
-                }
-            }
+            applyButton = findElement(APPLY_NOW_BUTTON);
+        } catch (NoSuchElementException e) {
+            logger.debug("Apply Now button not found by ID");
         } catch (Exception e) {
-            WebElement applyButton = findElement(By.xpath("//button[contains(text(), 'Apply')]"));
-            if (applyButton != null) {
-                clickWithJavascript(applyButton);
-            } else {
-                throw new RuntimeException("Apply Now button not found", e);
+            logger.warn("Unexpected error finding Apply Now button by ID: {}", e.getMessage());
+        }
+        
+        if (applyButton == null) {
+            try {
+                applyButton = findElement(By.xpath("//button[contains(text(), 'Apply Now')]"));
+            } catch (NoSuchElementException e) {
+                logger.debug("Apply Now button not found by XPath");
+            } catch (Exception e) {
+                logger.warn("Unexpected error finding Apply Now button by XPath: {}", e.getMessage());
             }
         }
+        
+        if (applyButton == null) {
+            try {
+                applyButton = findElement(By.xpath("//a[contains(text(), 'Apply Now')]"));
+            } catch (NoSuchElementException e) {
+                logger.debug("Apply Now link not found by XPath");
+            } catch (Exception e) {
+                logger.warn("Unexpected error finding Apply Now link by XPath: {}", e.getMessage());
+            }
+        }
+        
+        if (applyButton == null) {
+            try {
+                applyButton = findElement(By.xpath("//button[contains(text(), 'Apply')]"));
+            } catch (NoSuchElementException e) {
+                logger.debug("Apply button not found by XPath");
+            } catch (Exception e) {
+                logger.warn("Unexpected error finding Apply button by XPath: {}", e.getMessage());
+            }
+        }
+        
+        if (applyButton == null) {
+            throw new NoSuchElementException("Apply Now button not found on page");
+        }
+        
+        scrollToElement(applyButton);
+        clickWithJavascript(applyButton);
         waitForPageLoad();
         return new JobApplicationPage();
     }

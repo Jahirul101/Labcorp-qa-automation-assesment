@@ -4,13 +4,13 @@
 Production-ready Behavior-Driven Development (BDD) automation framework built with Java, Cucumber, and Selenium WebDriver.
 
 ## Key Features
-- ✅ 100% defect detection with robust error handling
-- ✅ Executive-ready HTML reports with interactive graphs
-- ✅ Screenshot capture on failure with inline report embedding
-- ✅ Thread-safe parallel execution support
-- ✅ Explicit waits (no flaky implicit waits)
-- ✅ Soft assertions for capturing multiple failures
-- ✅ Global exception handling
+- 100% defect detection with robust error handling
+- Executive-ready HTML reports with interactive graphs
+- Screenshot capture on failure with inline report embedding
+- Thread-safe parallel execution support
+- Explicit waits (no flaky implicit waits)
+-  Soft assertions for capturing multiple failures
+- Global exception handling
 
 ## Technology Stack
 - Java 17+
@@ -30,9 +30,9 @@ Production-ready Behavior-Driven Development (BDD) automation framework built wi
 - Git
 
 ### Clone Repository
-```bash
+
 git clone https://github.com/your-username/bdd-automation-framework.git
-```
+
 
 ### Import into Eclipse
 1. File → Import → Existing Maven Projects
@@ -40,17 +40,18 @@ git clone https://github.com/your-username/bdd-automation-framework.git
 3. Click Finish
 
 ### Run Tests
-```bash
+
 # Run all tests
 mvn clean test
 
-# Run specific tags
-mvn clean test -Dcucumber.filter.tags="@Smoke"
+# Run UI tests
+mvn test -Pui-tests
 
-# Generate reports only
-mvn cluecumber-report:reporting
-```
+# Run API tests
+mvn test -Papi-tests
 
 ### Reports Location
 - Masterthought: `target/cucumber-html-reports/overview-features.html`
 - Cluecumber: `target/generated-report/index.html`
+
+UI test will fail because currently there is no job available Exacly as "QA Test Automation Engineer". So it is expected.  API tests are good.
