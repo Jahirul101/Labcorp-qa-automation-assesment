@@ -30,8 +30,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
 
         <!-- Version Properties -->
         <selenium.version>4.16.1</selenium.version>
@@ -44,7 +44,6 @@
         <slf4j.version>2.0.9</slf4j.version>
         <log4j.version>2.22.1</log4j.version>
         <assertj.version>3.25.1</assertj.version>
-        <lombok.version>1.18.30</lombok.version>
         <javafaker.version>1.0.2</javafaker.version>
         <allure.version>2.25.0</allure.version>
 
@@ -165,14 +164,6 @@
             <version>${javafaker.version}</version>
         </dependency>
 
-        <!-- Lombok for reducing boilerplate code -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
         <!-- Allure Reporting -->
         <dependency>
             <groupId>io.qameta.allure</groupId>
@@ -189,16 +180,9 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven.compiler.version}</version>
                 <configuration>
-                    <source>17</source>
-                    <target>17</target>
+                    <source>11</source>
+                    <target>11</target>
                     <encoding>UTF-8</encoding>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 

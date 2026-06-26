@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extentreports>
+    <configuration>
+        <theme>dark</theme>
+        <encoding>UTF-8</encoding>
+        <protocol>https</protocol>
+        <documentTitle>LabCorp QA Automation Test Report</documentTitle>
+        <reportName>LabCorp Test Automation Execution Report</reportName>
+        <testViewChartLocation>bottom</testViewChartLocation>
+    </configuration>
+</extentreports>
